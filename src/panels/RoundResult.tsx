@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Div, Button, Card, Text, Title, Group, Spacing, CardGrid } from '@vkontakte/vkui';
 import { Icon24CheckCircleOutline, Icon24Cancel } from '@vkontakte/icons';
+import bridge, { EAdsFormats } from '@vkontakte/vk-bridge';
 import { useGame } from '../store/GameContext';
 
 interface Props {
@@ -10,6 +11,12 @@ interface Props {
 
 const RoundResult: React.FC<Props> = ({ onNextRound, onFinalResult }) => {
   const { state } = useGame();
+
+  useEffect(() => {
+    setTimeout(() => {
+      bridge.send('VKWebAppShowNativeAds', { ad_format: EAdsFormats.INTERSTITIAL }).catch(() => {});
+    }, 1500);
+  }, []);
 
   const correctAnswers = state.userAnswers.filter(a => a.correct).length;
   const totalAnswers = state.userAnswers.length;

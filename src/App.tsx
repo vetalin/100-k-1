@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import bridge, { BannerAdLocation } from '@vkontakte/vk-bridge';
 import {
   ConfigProvider,
   platform,
@@ -9,6 +10,7 @@ import {
   PanelHeader,
   Tabbar,
   TabbarItem,
+  ColorSchemeType,
 } from '@vkontakte/vkui';
 import '@vkontakte/vkui/dist/vkui.css';
 
@@ -32,10 +34,20 @@ type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'leaderb
 const App: React.FC = () => {
   const [activePanel, setActivePanel] = useState<ActivePanel>('start');
   const [activeStory, setActiveStory] = useState('home');
+  const [colorScheme, setColorScheme] = useState<ColorSchemeType | undefined>(undefined);
   const { fetchUser } = useUser();
 
   useEffect(() => {
+    bridge.subscribe((e: any) => {
+      if (e.detail.type === 'VKWebAppUpdateConfig') {
+        setColorScheme(e.detail.data.appearance);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
     fetchUser();
+    bridge.send('VKWebAppShowBannerAd', { banner_location: BannerAdLocation.BOTTOM });
   }, []);
 
   const handleStoryChange = (story: string) => {
@@ -53,7 +65,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <ConfigProvider platform={platform()} >
+    <ConfigProvider platform={platform()} colorScheme={colorScheme}>
       <AppRoot mode="embedded">
         <Epic activeStory={activeStory} tabbar={
           <Tabbar>
