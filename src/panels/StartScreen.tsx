@@ -21,6 +21,13 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
   const { dispatch } = useGame();
   const { stats } = useUser();
 
+  const getDayLabel = () => {
+    const now = new Date();
+    const msk = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+    const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+    return days[msk.getDay()];
+  };
+
   const handlePlay = () => {
     dispatch({ type: 'START_GAME' });
     onStartGame();
@@ -39,7 +46,7 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
       <Card mode="shadow" style={{ marginBottom: 16, textAlign: 'center', padding: 24 }}>
         <Title level="1" style={{ marginBottom: 8 }}>🎯 Угадай популярный ответ!</Title>
         <Text style={{ color: 'var(--vkui--color_text_secondary)' }}>
-          Проверь свою интуицию в викторине 100 к 1
+          {getDayLabel()}, новые вопросы!
         </Text>
         {stats.streak > 0 && (
           <div style={{ marginTop: 12 }}>

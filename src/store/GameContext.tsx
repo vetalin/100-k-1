@@ -17,6 +17,7 @@ export interface GameState {
   userAnswers: { questionId: number; answerIndex: number; correct: boolean; percent: number }[];
   hintsBought: boolean;
   gamePhase: 'idle' | 'playing' | 'revealing' | 'round_end' | 'game_end';
+  dateSeed: number;
 }
 
 type GameAction =
@@ -45,29 +46,52 @@ const initialState: GameState = {
   userAnswers: [],
   hintsBought: false,
   gamePhase: 'idle',
+  dateSeed: 0,
 };
 
-function shuffleArray<T>(array: T[]): T[] {
+// Seeded PRNG (djb2 hash + linear congruential generator)
+function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    return s / 0x7fffffff;
+  };
+}
+
+function seededShuffle<T>(array: T[], seed: number): T[] {
+  const rng = seededRandom(seed);
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
 }
 
-function getQuestionsForRound(category: Category | null, allQuestions: Question[]): Question[] {
+function getDateSeed(): number {
+  const now = new Date();
+  const mskDate = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+  const dateStr = mskDate.toISOString().split('T')[0];
+  let hash = 5381;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = ((hash << 5) + hash) + dateStr.charCodeAt(i);
+  }
+  return Math.abs(hash);
+}
+
+function getQuestionsForRound(category: Category | null, allQuestions: Question[], seed: number): Question[] {
   const filtered = category
     ? allQuestions.filter(q => q.category === category)
     : allQuestions;
-  return shuffleArray(filtered).slice(0, 5);
+  return seededShuffle(filtered, seed).slice(0, 5);
 }
 
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'START_GAME': {
       const category = action.category ?? state.selectedCategory;
-      const roundQuestions = getQuestionsForRound(category, state.questions);
+      const todaySeed = getDateSeed();
+      const roundQuestions = getQuestionsForRound(category, state.questions, todaySeed);
       return {
         ...state,
         currentRound: 1,
@@ -77,6 +101,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         hintsBought: false,
         gamePhase: 'playing',
         roundQuestions,
+        dateSeed: todaySeed,
       };
     }
     case 'SELECT_CATEGORY':
@@ -111,7 +136,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       if (nextRound > state.totalRounds) {
         return { ...state, gamePhase: 'game_end' };
       }
-      const nextRoundQuestions = getQuestionsForRound(state.selectedCategory, state.questions);
+      const nextRoundQuestions = getQuestionsForRound(state.selectedCategory, state.questions, state.dateSeed);
       return {
         ...state,
         currentRound: nextRound,
