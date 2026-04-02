@@ -24,14 +24,15 @@ interface LeaderboardEntry {
   };
   score: number;
   place: number;
+  isDemo?: boolean;
 }
 
 const MOCK_LEADERBOARD: LeaderboardEntry[] = [
-  { user: { id: 1, first_name: 'Александр', last_name: 'Петров', photo_200: '' }, score: 5200, place: 1 },
-  { user: { id: 2, first_name: 'Мария', last_name: 'Иванова', photo_200: '' }, score: 4100, place: 2 },
-  { user: { id: 3, first_name: 'Дмитрий', last_name: 'Сидоров', photo_200: '' }, score: 3800, place: 3 },
-  { user: { id: 4, first_name: 'Елена', last_name: 'Козлова', photo_200: '' }, score: 3400, place: 4 },
-  { user: { id: 5, first_name: 'Сергей', last_name: 'Новиков', photo_200: '' }, score: 2900, place: 5 },
+  { user: { id: 1, first_name: 'Пример', last_name: '(demo)', photo_200: '' }, score: 5200, place: 1, isDemo: true },
+  { user: { id: 2, first_name: 'Данные', last_name: '(demo)', photo_200: '' }, score: 4100, place: 2, isDemo: true },
+  { user: { id: 3, first_name: 'Тест', last_name: '(demo)', photo_200: '' }, score: 3800, place: 3, isDemo: true },
+  { user: { id: 4, first_name: 'Образец', last_name: '(demo)', photo_200: '' }, score: 3400, place: 4, isDemo: true },
+  { user: { id: 5, first_name: 'Проба', last_name: '(demo)', photo_200: '' }, score: 2900, place: 5, isDemo: true },
 ];
 
 type FriendsState = 'loading' | 'loaded' | 'empty' | 'error' | 'mock';
@@ -194,6 +195,7 @@ const Leaderboard: React.FC = () => {
                   <div style={{ flex: 1 }}>
                     <Text>
                       {entry.user.first_name} {entry.user.last_name}
+                      {entry.isDemo && <Badge style={{ marginLeft: 6, background: '#666' }}>🧪 demo</Badge>}
                     </Text>
                     <Text style={{ color: 'var(--vkui--color_text_secondary)' }}>
                       #{entry.place} место

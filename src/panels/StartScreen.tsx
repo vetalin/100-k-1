@@ -12,7 +12,7 @@ import {
   getEmptyCategoryStats,
   getStorageKey,
   isWeakCategory,
-  isStrongCategory,
+  
 } from '../utils/categoryStats';
 import { Category } from '../types';
 
@@ -124,19 +124,19 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
             {CATEGORIES.map(cat => {
               const stat = catStats[cat.id];
               const weak = isWeakCategory(stat);
-              const strong = isStrongCategory(stat);
+              
               const hasEnough = stat.totalAnswered >= 3;
 
               return (
-                <Card
+                <Button
                   key={cat.id}
-                  mode={weak ? 'outline' : 'shadow'}
+                  mode="tertiary"
+                  stretched
                   onClick={() => handleCategorySelect(cat.id)}
                   style={{
-                    cursor: 'pointer',
                     padding: '10px 12px',
-                    borderColor: weak ? '#FF4444' : strong ? '#44AA44' : undefined,
                     opacity: hasEnough ? 1 : 0.5,
+                    justifyContent: 'flex-start',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -166,7 +166,7 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
                       )}
                     </div>
                   </div>
-                </Card>
+                </Button>
               );
             })}
           </CardGrid>
@@ -178,12 +178,12 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
       <Group header={<Title level="2">Категории</Title>}>
         <CardGrid size="s">
           {CATEGORIES.map((cat) => (
-            <Card
+            <Button
               key={cat.id}
-              mode="shadow"
+              mode="secondary"
+              stretched
               onClick={() => handleCategorySelect(cat.id)}
               style={{
-                cursor: 'pointer',
                 textAlign: 'center',
                 padding: 16,
                 minHeight: 80,
@@ -198,7 +198,7 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
               <Text style={{ fontSize: 12, color: 'var(--vkui--color_text_secondary)' }}>
                 ?
               </Text>
-            </Card>
+            </Button>
           ))}
         </CardGrid>
       </Group>
