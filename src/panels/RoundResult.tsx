@@ -4,6 +4,7 @@ import { Icon24CheckCircleOutline, Icon24Cancel } from '@vkontakte/icons';
 import bridge, { EAdsFormats } from '@vkontakte/vk-bridge';
 import { useGame } from '../store/GameContext';
 import { useQuests } from '../store/QuestContext';
+import { useSeason } from '../store/SeasonContext';
 import { useAchievements } from '../store/AchievementContext';
 
 interface Props {
@@ -14,15 +15,24 @@ interface Props {
 const RoundResult: React.FC<Props> = ({ onNextRound, onFinalResult }) => {
   const { state, dispatch } = useGame();
   const { updateProgress } = useQuests();
+  const { addXP } = useSeason();
 
-  // Update quest progress when round ends
+  // Update quest + season XP when round ends
   React.useEffect(() => {
-    // Q: play_2_rounds / play_3_rounds — increment rounds played
+    // Quest progress
     updateProgress('play_2_rounds', (state.currentRound));
     updateProgress('play_3_rounds', (state.currentRound));
 
+    // XP for correct answers
+    const correctCount = state.userAnswers.filter(a => a.correct).length;
+    const xpPerCorrect = 10;
+    const xpForParticipation = 5;
+    addXP(correctCount * xpPerCorrect + xpForParticipation);
+
     // Q: accuracy_70
-    const accuracy = state.userAnswers.filter(a => a.correct).length / Math.max(1, state.userAnswers.length);
+    const accuracy = state.userAnswers.length > 0
+      ? state.userAnswers.filter(a => a.correct).length / state.userAnswers.length
+      : 0;
     if (accuracy >= 0.7) updateProgress('accuracy_70', 1);
 
     // Q: round_1000_score
@@ -30,9 +40,6 @@ const RoundResult: React.FC<Props> = ({ onNextRound, onFinalResult }) => {
 
     // Q: combo_3
     if (state.bestCombo >= 3) updateProgress('combo_3', state.bestCombo);
-
-    // Q: streak_3
-    // will be triggered separately via stats
   }, []);
   const { checkPerfectRound } = useAchievements();
 

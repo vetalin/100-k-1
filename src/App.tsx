@@ -18,7 +18,9 @@ import { Icon28GameOutline, Icon28UsersOutline, Icon28UserCircleOutline } from '
 
 import { GameProvider, useGame } from './store/GameContext';
 import { QuestProvider, useQuests } from './store/QuestContext';
+import { SeasonProvider } from './store/SeasonContext';
 import QuestsScreen from './panels/QuestsScreen';
+import SeasonScreen from './panels/SeasonScreen';
 import ChallengeModal from './components/ChallengeModal';
 import { parseChallengeFromSearch, ChallengeParams } from './utils/challenge';
 import { UserProvider, useUser } from './store/UserContext';
@@ -40,7 +42,7 @@ import Profile from './panels/Profile';
 import './App.css';
 import OnboardingGuide from './components/OnboardingGuide';
 
-type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'tournament_result' | 'leaderboard' | 'categories' | 'profile' | 'review' | 'mini_round' | 'quests';
+type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'tournament_result' | 'leaderboard' | 'categories' | 'profile' | 'review' | 'mini_round' | 'quests' | 'season';
 
 const App: React.FC = () => {
   const [activePanel, setActivePanel] = useState<ActivePanel>('start');
@@ -169,6 +171,9 @@ const App: React.FC = () => {
               <PanelHeader transparent shadow={false}>Задания дня</PanelHeader>
               <QuestsScreen onBack={() => goToPanel('start')} />
             </Panel>
+            <Panel id="season">
+              <SeasonScreen onBack={() => goToPanel('start')} />
+            </Panel>
             <Panel id="tournament_result">
               <PanelHeader transparent shadow={false}>Результаты турнира</PanelHeader>
               <TournamentResult onViewProfile={() => handleStoryChange('profile')} onNewTournament={() => goToPanel('start')} />
@@ -208,7 +213,9 @@ const AppWrapper: React.FC = () => (
         <AchievementProvider>
         <TournamentProvider>
         <QuestProvider>
+        <SeasonProvider>
           <App />
+        </SeasonProvider>
         </QuestProvider>
         </TournamentProvider>
       </AchievementProvider>
