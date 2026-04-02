@@ -3,6 +3,7 @@ import { Div, Button, Card, Text, Title, Group, Spacing, Avatar, CardGrid } from
 import { useGame } from '../store/GameContext';
 import { useUser } from '../store/UserContext';
 import { useAchievements } from '../store/AchievementContext';
+import { useTournament } from '../store/TournamentContext';
 import bridge from '@vkontakte/vk-bridge';
 
 interface Props {
@@ -14,6 +15,7 @@ const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard }) => {
   const { state, dispatch } = useGame();
   const { user, stats, updateStats } = useUser();
   const { checkAndUnlock } = useAchievements();
+  const { addTournamentScore, isTournament, multiplier } = useTournament();
 
   const correctAnswers = state.userAnswers.filter(a => a.correct).length;
   const totalAnswers = state.userAnswers.length;
@@ -65,6 +67,11 @@ const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard }) => {
         })
       }).catch(e => console.error('Failed to save leaderboard score:', e));
     }
+
+    // Save tournament score if tournament is active
+    if (isTournament) {
+      addTournamentScore(state.score);
+    }
   }, []);
 
   const handleShare = async () => {
@@ -100,7 +107,11 @@ const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard }) => {
         <Title level="1" style={{ marginTop: 16 }}>
           🏆 {state.score} очков
         </Title>
-
+        {isTournament && (
+          <Text style={{ color: '#FFD700' }}>
+            🎁 Турнирные очки: +{state.score * multiplier} (×{multiplier})
+          </Text>
+        )}
       </Card>
 
       <CardGrid size="s" style={{ marginBottom: 16 }}>

@@ -2,6 +2,8 @@ import React from 'react';
 import { Div, Button, Card, CardGrid, Text, Title, Group, Badge, Spacing } from '@vkontakte/vkui';
 import { useGame } from '../store/GameContext';
 import { useUser } from '../store/UserContext';
+import { useTournament } from '../store/TournamentContext';
+import { getTournamentTimeLeft } from '../utils/tournament';
 
 interface Props {
   onStartGame: () => void;
@@ -20,6 +22,8 @@ const CATEGORIES = [
 const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
   const { dispatch } = useGame();
   const { stats } = useUser();
+  const { tournament, isTournament, multiplier } = useTournament();
+  const timeLeft = getTournamentTimeLeft();
 
   const getDayLabel = () => {
     const now = new Date();
@@ -32,8 +36,6 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
     dispatch({ type: 'START_GAME' });
     onStartGame();
   };
-
-
 
   const handleCategorySelect = (categoryId: 'food' | 'people' | 'animals' | 'school' | 'work' | 'love') => {
     dispatch({ type: 'SELECT_CATEGORY', category: categoryId });
@@ -57,7 +59,18 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
         )}
       </Card>
 
+      {isTournament && timeLeft && (
+        <Card mode="outline" style={{ border: '2px solid #FFD700', marginBottom: 12, padding: 12, textAlign: 'center' }}>
+          <Title level="3">🏆 Недельный турнир</Title>
+          <Text>Заканчивается через: {timeLeft.days}д {timeLeft.hours}ч</Text>
+          {tournament && <Text>Твой счёт: {tournament.score} ×{multiplier}</Text>}
+        </Card>
+      )}
+
       <Group header={<Title level="2">Категории</Title>}>
+        <Badge mode="prominent" style={{ background: '#FFD700', color: '#000' }}>
+          🏆 ×2
+        </Badge>
         <CardGrid size="s">
           {CATEGORIES.map((cat) => (
             <Card

@@ -27,6 +27,8 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   { id: 'perfect_round', emoji: '💯', title: 'Идеальный раунд', description: '5/5 верных за раунд', unlockedAt: null },
   { id: 'category_master', emoji: '🎓', title: 'Знаток категории', description: '10 верных в одной категории', unlockedAt: null },
   { id: 'top_1', emoji: '🥇', title: '#1 в рейтинге', description: 'Займи 1 место среди друзей', unlockedAt: null },
+  { id: 'tournament_top_3', emoji: '🎖', title: 'Топ-3 турнира', description: 'Займи 3 место в турнире', unlockedAt: null },
+  { id: 'tournament_winner', emoji: '🏆', title: 'Победитель турнира', description: 'Займи 1 место в турнире', unlockedAt: null },
 ];
 
 const AchievementContext = createContext<AchievementContextType | null>(null);
@@ -86,6 +88,12 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
             break;
           case 'score_5000':
             unlocked = (stats.bestScore || 0) >= 5000;
+            break;
+          case 'tournament_top_3':
+            unlocked = (stats as any).tournamentPlace !== undefined && (stats as any).tournamentPlace <= 3;
+            break;
+          case 'tournament_winner':
+            unlocked = (stats as any).tournamentPlace === 1;
             break;
           // perfect_round and top_1 handled separately
         }

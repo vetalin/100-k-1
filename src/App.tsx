@@ -19,6 +19,7 @@ import { Icon28GameOutline, Icon28UsersOutline, Icon28UserCircleOutline } from '
 import { GameProvider } from './store/GameContext';
 import { UserProvider, useUser } from './store/UserContext';
 import { AchievementProvider } from './store/AchievementContext';
+import { TournamentProvider } from './store/TournamentContext';
 
 import StartScreen from './panels/StartScreen';
 import GameScreen from './panels/GameScreen';
@@ -141,7 +142,9 @@ const AppWrapper: React.FC = () => (
   <UserProvider>
     <GameProvider>
       <AchievementProvider>
-        <App />
+        <TournamentProvider>
+          <App />
+        </TournamentProvider>
       </AchievementProvider>
     </GameProvider>
   </UserProvider>
