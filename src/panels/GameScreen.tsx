@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Div, Button, Card, Progress, Text, Title, Group, Spacing, FixedLayout } from '@vkontakte/vkui';
 import { Icon24LightbulbOutline, Icon24CheckCircleOutline, Icon24Cancel } from '@vkontakte/icons';
 import { useGame } from '../store/GameContext';
+import { useSettings } from '../store/SettingsContext';
 import { useUser } from '../store/UserContext';
 import { updateCategoryStats, CategoryStatsMap } from '../utils/categoryStats';
 
@@ -13,6 +14,7 @@ interface Props {
 const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
   const { state, dispatch } = useGame();
   const { user } = useUser();
+  const { play, vibra } = useSettings();
   const [timer, setTimer] = useState(15);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
@@ -61,6 +63,11 @@ const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
     setSelectedAnswer(index);
     setRevealed(true);
     dispatch({ type: 'SELECT_ANSWER', answerIndex: index });
+
+    // Sound & vibration feedback
+    const isCorrect = index === 0;
+    if (isCorrect) { play('correct'); vibra('correct'); }
+    else { play('wrong'); vibra('wrong'); }
 
     // Save category stats
     if (user && currentQuestion && currentQuestion.category) {
