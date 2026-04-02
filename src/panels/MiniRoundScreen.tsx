@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Div, Button, Card, Text, Title, Group, FixedLayout, Spacing } from '@vkontakte/vkui';
 import { Question } from '../types/index';
+import { useQuests } from '../store/QuestContext';
 
 interface Props {
   questions: Question[];
@@ -8,6 +9,7 @@ interface Props {
 }
 
 const MiniRoundScreen: React.FC<Props> = ({ questions, onFinish }) => {
+  const { updateProgress } = useQuests();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -32,8 +34,8 @@ const MiniRoundScreen: React.FC<Props> = ({ questions, onFinish }) => {
   };
 
   const handleFinish = () => {
-    const finalCount = selected === 0 ? correctCount : correctCount;
-    onFinish(finalCount);
+    updateProgress('mini_round', 1);
+    onFinish(correctCount);
   };
 
   return (

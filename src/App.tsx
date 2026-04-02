@@ -17,6 +17,8 @@ import '@vkontakte/vkui/dist/vkui.css';
 import { Icon28GameOutline, Icon28UsersOutline, Icon28UserCircleOutline } from '@vkontakte/icons';
 
 import { GameProvider } from './store/GameContext';
+import { QuestProvider, useQuests } from './store/QuestContext';
+import QuestsScreen from './panels/QuestsScreen';
 import { UserProvider, useUser } from './store/UserContext';
 import { AchievementProvider } from './store/AchievementContext';
 import { TournamentProvider } from './store/TournamentContext';
@@ -36,14 +38,15 @@ import Profile from './panels/Profile';
 import './App.css';
 import OnboardingGuide from './components/OnboardingGuide';
 
-type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'tournament_result' | 'leaderboard' | 'categories' | 'profile' | 'review' | 'mini_round';
+type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'tournament_result' | 'leaderboard' | 'categories' | 'profile' | 'review' | 'mini_round' | 'quests';
 
 const App: React.FC = () => {
   const [activePanel, setActivePanel] = useState<ActivePanel>('start');
   const [activeStory, setActiveStory] = useState('home');
   const [miniRoundQuestions, setMiniRoundQuestions] = useState<import('./types/index').Question[]>([]);
   const [colorScheme, setColorScheme] = useState<ColorSchemeType | undefined>(undefined);
-  const { fetchUser } = useUser();
+  const { fetchUser, stats } = useUser();
+  const { initQuests } = useQuests();
 
   useEffect(() => {
     bridge.subscribe((e: any) => {
@@ -57,6 +60,12 @@ const App: React.FC = () => {
     fetchUser();
     bridge.send('VKWebAppShowBannerAd', { banner_location: BannerAdLocation.BOTTOM });
   }, []);
+
+  useEffect(() => {
+    if (stats) {
+      initQuests(stats.streak ?? 0);
+    }
+  }, [stats?.streak]);
 
   const handleStoryChange = (story: string) => {
     setActiveStory(story);
@@ -107,7 +116,7 @@ const App: React.FC = () => {
           <View id="home" activePanel={activePanel}>
             <Panel id="start">
               <PanelHeader transparent shadow={false}>100 к 1</PanelHeader>
-              <StartScreen onStartGame={() => goToPanel('game')} onOpenLeaderboard={() => handleStoryChange('leaderboard')} />
+              <StartScreen onStartGame={() => goToPanel('game')} onOpenLeaderboard={() => handleStoryChange('leaderboard')} onOpenQuests={() => goToPanel('quests')} />
             </Panel>
             <Panel id="game">
               <PanelHeader transparent shadow={false} delimiter="none">Вопрос</PanelHeader>
@@ -120,14 +129,24 @@ const App: React.FC = () => {
             <Panel id="final_result">
               <PanelHeader transparent shadow={false}>Итоги</PanelHeader>
               <FinalResult onPlayAgain={() => goToPanel('start')} onLeaderboard={() => handleStoryChange('leaderboard')} onReview={() => goToPanel('review')} />
+            </Panel>
+            <Panel id="review">
+              <PanelHeader transparent shadow={false}>Разбор ошибок</PanelHeader>
               <ReviewScreen
                 onBack={() => goToPanel('final_result')}
                 onMiniRound={(qs) => { setMiniRoundQuestions(qs); goToPanel('mini_round'); }}
               />
+            </Panel>
+            <Panel id="mini_round">
+              <PanelHeader transparent shadow={false}>Мини-раунд</PanelHeader>
               <MiniRoundScreen
                 questions={miniRoundQuestions}
                 onFinish={() => goToPanel('review')}
               />
+            </Panel>
+            <Panel id="quests">
+              <PanelHeader transparent shadow={false}>Задания дня</PanelHeader>
+              <QuestsScreen onBack={() => goToPanel('start')} />
             </Panel>
             <Panel id="tournament_result">
               <PanelHeader transparent shadow={false}>Результаты турнира</PanelHeader>
@@ -167,7 +186,9 @@ const AppWrapper: React.FC = () => (
       <SettingsProvider>
         <AchievementProvider>
         <TournamentProvider>
+        <QuestProvider>
           <App />
+        </QuestProvider>
         </TournamentProvider>
       </AchievementProvider>
       </SettingsProvider>

@@ -3,6 +3,7 @@ import { Div, Button, Card, Text, Title, Group, Spacing, CardGrid } from '@vkont
 import { Icon24CheckCircleOutline, Icon24Cancel } from '@vkontakte/icons';
 import bridge, { EAdsFormats } from '@vkontakte/vk-bridge';
 import { useGame } from '../store/GameContext';
+import { useQuests } from '../store/QuestContext';
 import { useAchievements } from '../store/AchievementContext';
 
 interface Props {
@@ -12,6 +13,27 @@ interface Props {
 
 const RoundResult: React.FC<Props> = ({ onNextRound, onFinalResult }) => {
   const { state, dispatch } = useGame();
+  const { updateProgress } = useQuests();
+
+  // Update quest progress when round ends
+  React.useEffect(() => {
+    // Q: play_2_rounds / play_3_rounds — increment rounds played
+    updateProgress('play_2_rounds', (state.currentRound));
+    updateProgress('play_3_rounds', (state.currentRound));
+
+    // Q: accuracy_70
+    const accuracy = state.userAnswers.filter(a => a.correct).length / Math.max(1, state.userAnswers.length);
+    if (accuracy >= 0.7) updateProgress('accuracy_70', 1);
+
+    // Q: round_1000_score
+    if (state.roundScore >= 1000) updateProgress('round_1000_score', 1);
+
+    // Q: combo_3
+    if (state.bestCombo >= 3) updateProgress('combo_3', state.bestCombo);
+
+    // Q: streak_3
+    // will be triggered separately via stats
+  }, []);
   const { checkPerfectRound } = useAchievements();
 
   useEffect(() => {

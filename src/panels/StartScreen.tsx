@@ -19,6 +19,7 @@ import { Category } from '../types';
 interface Props {
   onStartGame: () => void;
   onOpenLeaderboard: () => void;
+  onOpenQuests?: () => void;
 }
 
 const CATEGORIES: { id: Category; emoji: string; name: string }[] = [
@@ -30,7 +31,7 @@ const CATEGORIES: { id: Category; emoji: string; name: string }[] = [
   { id: 'love', emoji: '❤️', name: 'Любовь' },
 ];
 
-const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
+const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard, onOpenQuests }) => {
   const { dispatch } = useGame();
   const { user, stats } = useUser();
   const { tournament, isTournament, multiplier } = useTournament();
@@ -224,6 +225,15 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
       <Button size="l" stretched mode="outline" onClick={onOpenLeaderboard}>
         🏆 Таблица лидеров
       </Button>
+
+      {onOpenQuests && (
+        <>
+          <Spacing size={12} />
+          <Button size="l" stretched mode="outline" onClick={onOpenQuests}>
+            ⭐ Задания дня
+          </Button>
+        </>
+      )}
     {/* Daily Challenge Modal */}
     {showChallenge && (
       <DailyChallengeModal
