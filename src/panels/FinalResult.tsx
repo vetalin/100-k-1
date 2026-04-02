@@ -4,6 +4,7 @@ import { useGame } from '../store/GameContext';
 import { useUser } from '../store/UserContext';
 import { useAchievements } from '../store/AchievementContext';
 import { useTournament } from '../store/TournamentContext';
+import { generateStoryImage } from '../utils/storyImage';
 import bridge from '@vkontakte/vk-bridge';
 
 interface Props {
@@ -74,21 +75,43 @@ const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard }) => {
     }
   }, []);
 
-  const handleShare = async () => {
+    const handleShare = async () => {
     try {
-      await bridge.send('VKWebAppShowStoryBox', {
-        background_type: 'image',
-        url: 'https://example.com/result.jpg',
-        attachment: {
-          type: 'url',
-          text: 'Попробуй в 100 к 1!',
-          url: `https://vk.com/app0`,
-        }
+      // Generate story image
+      const imageDataUrl = await generateStoryImage({
+        userName: user ? `${user.first_name} ${user.last_name}` : 'Игрок',
+        userAvatarUrl: user?.photo_200 || '',
+        score: state.score,
+        correctAnswers,
+        totalQuestions: totalAnswers,
+        bestPercent,
+        streak: stats?.streak || 0,
+        isTournament,
+        tournamentMultiplier: multiplier,
       });
+
+      // Try Stories first
+      try {
+        await bridge.send('VKWebAppShowStoryBox', {
+          background_type: 'image',
+          url: imageDataUrl,
+          attachment: {
+            type: 'url',
+            text: `Мой результат: ${state.score} очков в 100 к 1! 🎯`,
+            url: `https://vk.com/app0`,
+          }
+        });
+      } catch {
+        // Fallback to wall post
+        await bridge.send('VKWebAppShowWallPostBox', {
+          message: `🎯 Мой результат в 100 к 1: ${state.score} очков! ${correctAnswers}/${totalAnswers} верных ответов. Попробуй и ты!`,
+        });
+      }
     } catch (e) {
-      console.log('Stories not available');
+      console.error('Share failed:', e);
     }
   };
+
 
   const handlePlayAgain = () => {
     dispatch({ type: 'RESET_GAME' });
