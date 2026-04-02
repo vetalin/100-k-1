@@ -1,0 +1,102 @@
+.App {
+  text-align: center;
+}
+
+.VKUI {
+  font-family: 'VK Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Custom button styles */
+.Button--gold {
+  background: linear-gradient(135deg, #F5C518 0%, #E3A008 100%);
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(227, 160, 8, 0.3);
+}
+
+/* Card animations */
+.Card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.Card:active {
+  transform: scale(0.98);
+}
+
+/* Answer button states */
+.AnswerButton {
+  transition: all 0.3s ease;
+}
+
+.AnswerButton--locked {
+  opacity: 0.6;
+}
+
+.AnswerButton--correct {
+  background-color: #E8F5E9;
+  border-color: #4BB34A;
+}
+
+.AnswerButton--wrong {
+  background-color: #FFEBEE;
+  border-color: #E64646;
+}
+
+.AnswerButton--revealed {
+  animation: revealAnswer 0.3s ease-out;
+}
+
+@keyframes revealAnswer {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Score counter animation */
+.ScoreCounter {
+  animation: scorePop 0.5s ease-out;
+}
+
+@keyframes scorePop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Progress bar animation */
+.Progress__value {
+  transition: width 0.4s ease-out;
+}
+
+/* Category card hover */
+.CategoryCard {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.CategoryCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Banner padding */
+.BannerPadding {
+  padding-bottom: calc(50px + env(safe-area-inset-bottom));
+}
+
+/* Dark mode adjustments */
+:root[scheme="dark"] .Button--gold {
+  background: linear-gradient(135deg, #F5C518 0%, #C8920A 100%);
+  box-shadow: 0 4px 16px rgba(245, 197, 24, 0.25);
+}
