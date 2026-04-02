@@ -91,7 +91,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'START_GAME': {
       const category = action.category ?? state.selectedCategory;
       const todaySeed = getDateSeed();
-      const roundQuestions = getQuestionsForRound(category, state.questions, todaySeed);
+      const roundQuestions = getQuestionsForRound(category, state.questions, todaySeed + 1 * 99991);
       return {
         ...state,
         currentRound: 1,
@@ -136,7 +136,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       if (nextRound > state.totalRounds) {
         return { ...state, gamePhase: 'game_end' };
       }
-      const nextRoundQuestions = getQuestionsForRound(state.selectedCategory, state.questions, state.dateSeed);
+      const nextRoundQuestions = getQuestionsForRound(state.selectedCategory, state.questions, state.dateSeed + nextRound * 99991);
       return {
         ...state,
         currentRound: nextRound,
