@@ -1,17 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Div, Card, Avatar, Text, Title, Group, Spacing, Button, Snackbar, Badge } from '@vkontakte/vkui';
 import { useUser } from '../store/UserContext';
 import { useAchievements } from '../store/AchievementContext';
-import { useState } from 'react';
 import bridge from '@vkontakte/vk-bridge';
+import { getEmptyCategoryStats, getStorageKey, CategoryStatsMap } from '../utils/categoryStats';
+import { RadarChart } from '../components/RadarChart';
+import { CategoryBreakdown } from '../components/CategoryBreakdown';
 
 const Profile: React.FC = () => {
   const { user, stats } = useUser();
   const { achievements, unlockedCount } = useAchievements();
   const [showSnackbar, setShowSnackbar] = useState(false);
+  const [catStats, setCatStats] = useState<CategoryStatsMap>(getEmptyCategoryStats());
+
+  // Load category stats from VK Storage
+  useEffect(() => {
+    if (!user) return;
+    bridge.send('VKWebAppStorageGet', { keys: [getStorageKey(user.id)] }).then((result: any) => {
+      const saved = result.keys?.find((k: any) => k.key === getStorageKey(user.id))?.value;
+      if (saved) {
+        try { setCatStats(JSON.parse(saved)); } catch {}
+      }
+    }).catch(() => {});
+  }, [user]);
 
   const handleBuyPro = async () => {
-    // For demo purposes, just show snackbar
     setShowSnackbar(true);
   };
 
@@ -57,6 +70,14 @@ const Profile: React.FC = () => {
               <Text style={{ fontSize: 12 }}>Серия</Text>
             </div>
           </div>
+        </Card>
+      </Group>
+
+      {/* Radar Chart Section */}
+      <Group header={<Title level="2">📊 Радар прогресса</Title>}>
+        <Card mode="shadow" style={{ padding: 16 }}>
+          <RadarChart stats={catStats} />
+          <CategoryBreakdown stats={catStats} />
         </Card>
       </Group>
 
