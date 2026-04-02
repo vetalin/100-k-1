@@ -165,6 +165,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         hintsBought: false,
         gamePhase: 'playing',
         roundQuestions: nextRoundQuestions,
+        comboCount: 0,
       };
     }
     case 'END_GAME':

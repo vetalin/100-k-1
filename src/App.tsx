@@ -26,6 +26,7 @@ import StartScreen from './panels/StartScreen';
 import GameScreen from './panels/GameScreen';
 import RoundResult from './panels/RoundResult';
 import FinalResult from './panels/FinalResult';
+import ReviewScreen from './panels/ReviewScreen';
 import TournamentResult from './panels/TournamentResult';
 import Leaderboard from './panels/Leaderboard';
 import Categories from './panels/Categories';
@@ -34,7 +35,7 @@ import Profile from './panels/Profile';
 import './App.css';
 import OnboardingGuide from './components/OnboardingGuide';
 
-type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'tournament_result' | 'leaderboard' | 'categories' | 'profile';
+type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'tournament_result' | 'leaderboard' | 'categories' | 'profile' | 'review';
 
 const App: React.FC = () => {
   const [activePanel, setActivePanel] = useState<ActivePanel>('start');
@@ -116,7 +117,8 @@ const App: React.FC = () => {
             </Panel>
             <Panel id="final_result">
               <PanelHeader transparent shadow={false}>Итоги</PanelHeader>
-              <FinalResult onPlayAgain={() => goToPanel('start')} onLeaderboard={() => handleStoryChange('leaderboard')} />
+              <FinalResult onPlayAgain={() => goToPanel('start')} onLeaderboard={() => handleStoryChange('leaderboard')} onReview={() => goToPanel('review')} />
+              <ReviewScreen onBack={() => goToPanel('final_result')} />
             </Panel>
             <Panel id="tournament_result">
               <PanelHeader transparent shadow={false}>Результаты турнира</PanelHeader>

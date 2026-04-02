@@ -10,9 +10,10 @@ import bridge from '@vkontakte/vk-bridge';
 interface Props {
   onPlayAgain: () => void;
   onLeaderboard: () => void;
+  onReview?: () => void;
 }
 
-const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard }) => {
+const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard, onReview }) => {
   const { state, dispatch } = useGame();
   const { user, stats, updateStats } = useUser();
   const { checkAndUnlock } = useAchievements();
@@ -184,6 +185,14 @@ const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard }) => {
       <Button size="l" mode="outline" stretched onClick={onLeaderboard}>
         🏆 Таблица лидеров
       </Button>
+      {onReview && state.userAnswers.some(a => !a.correct) && (
+        <>
+          <Spacing size={12} />
+          <Button size="l" mode="secondary" stretched onClick={onReview}>
+            🔄 Разбор ошибок
+          </Button>
+        </>
+      )}
     </Div>
   );
 };
