@@ -25,13 +25,14 @@ import StartScreen from './panels/StartScreen';
 import GameScreen from './panels/GameScreen';
 import RoundResult from './panels/RoundResult';
 import FinalResult from './panels/FinalResult';
+import TournamentResult from './panels/TournamentResult';
 import Leaderboard from './panels/Leaderboard';
 import Categories from './panels/Categories';
 import Profile from './panels/Profile';
 
 import './App.css';
 
-type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'leaderboard' | 'categories' | 'profile';
+type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'tournament_result' | 'leaderboard' | 'categories' | 'profile';
 
 const App: React.FC = () => {
   const [activePanel, setActivePanel] = useState<ActivePanel>('start');
@@ -110,6 +111,10 @@ const App: React.FC = () => {
             <Panel id="final_result">
               <PanelHeader transparent shadow={false}>Итоги</PanelHeader>
               <FinalResult onPlayAgain={() => goToPanel('start')} onLeaderboard={() => handleStoryChange('leaderboard')} />
+            </Panel>
+            <Panel id="tournament_result">
+              <PanelHeader transparent shadow={false}>Результаты турнира</PanelHeader>
+              <TournamentResult onViewProfile={() => handleStoryChange('profile')} onNewTournament={() => goToPanel('start')} />
             </Panel>
             <Panel id="categories">
               <PanelHeader transparent shadow={false}>Категории</PanelHeader>
