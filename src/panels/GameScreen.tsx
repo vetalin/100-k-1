@@ -111,6 +111,11 @@ const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>🎯</span>
             <Text>{state.score}</Text>
+            {state.comboCount >= 2 && (
+              <span style={{ color: '#FF6B00', fontWeight: 700, fontSize: 14 }}>
+                🔥×{state.comboCount}
+              </span>
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>⏱️</span>

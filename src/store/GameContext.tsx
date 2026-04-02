@@ -18,6 +18,8 @@ export interface GameState {
   hintsBought: boolean;
   gamePhase: 'idle' | 'playing' | 'revealing' | 'round_end' | 'game_end';
   dateSeed: number;
+  comboCount: number;
+  bestCombo: number;
 }
 
 type GameAction =
@@ -47,9 +49,19 @@ const initialState: GameState = {
   hintsBought: false,
   gamePhase: 'idle',
   dateSeed: 0,
+  comboCount: 0,
+  bestCombo: 0,
 };
 
 // Seeded PRNG (djb2 hash + linear congruential generator)
+function getComboMultiplier(count: number): number {
+  if (count <= 1) return 1.0;
+  if (count === 2) return 1.1;
+  if (count === 3) return 1.2;
+  if (count === 4) return 1.3;
+  return 1.5; // cap
+}
+
 function seededRandom(seed: number): () => number {
   let s = seed;
   return () => {
@@ -102,6 +114,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         gamePhase: 'playing',
         roundQuestions,
         dateSeed: todaySeed,
+        comboCount: 0,
+        bestCombo: 0,
       };
     }
     case 'SELECT_CATEGORY':
@@ -111,11 +125,16 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       if (!currentQuestion) return state;
       const selectedAnswer = currentQuestion.answers[action.answerIndex];
       const isCorrect = action.answerIndex === 0;
-      const pointsEarned = isCorrect ? selectedAnswer.percent : 0;
+      const newCombo = isCorrect ? state.comboCount + 1 : 0;
+      const multiplier = isCorrect ? getComboMultiplier(newCombo) : 1.0;
+      const pointsEarned = Math.round((isCorrect ? selectedAnswer.percent : 0) * multiplier);
+      const newBestCombo = Math.max(state.bestCombo, newCombo);
       return {
         ...state,
         score: state.score + pointsEarned,
         roundScore: state.roundScore + pointsEarned,
+        comboCount: newCombo,
+        bestCombo: newBestCombo,
         hintsBought: false,
         gamePhase: 'revealing',
         userAnswers: [

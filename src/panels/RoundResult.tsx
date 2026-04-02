@@ -58,6 +58,11 @@ const RoundResult: React.FC<Props> = ({ onNextRound, onFinalResult }) => {
         <Text style={{ color: 'var(--vkui--color_text_secondary)', marginTop: 4 }}>
           Всего: {state.score}
         </Text>
+        {state.bestCombo >= 2 && (
+          <Text style={{ color: '#FF6B00', marginTop: 8, fontWeight: 700 }}>
+            🔥 Лучшее комбо: ×{state.bestCombo}
+          </Text>
+        )}
       </Card>
 
       <Card mode="tint" style={{ padding: 16, marginBottom: 16 }}>
