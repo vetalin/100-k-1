@@ -16,9 +16,11 @@ import '@vkontakte/vkui/dist/vkui.css';
 
 import { Icon28GameOutline, Icon28UsersOutline, Icon28UserCircleOutline } from '@vkontakte/icons';
 
-import { GameProvider } from './store/GameContext';
+import { GameProvider, useGame } from './store/GameContext';
 import { QuestProvider, useQuests } from './store/QuestContext';
 import QuestsScreen from './panels/QuestsScreen';
+import ChallengeModal from './components/ChallengeModal';
+import { parseChallengeFromSearch, ChallengeParams } from './utils/challenge';
 import { UserProvider, useUser } from './store/UserContext';
 import { AchievementProvider } from './store/AchievementContext';
 import { TournamentProvider } from './store/TournamentContext';
@@ -44,8 +46,10 @@ const App: React.FC = () => {
   const [activePanel, setActivePanel] = useState<ActivePanel>('start');
   const [activeStory, setActiveStory] = useState('home');
   const [miniRoundQuestions, setMiniRoundQuestions] = useState<import('./types/index').Question[]>([]);
+  const [pendingChallenge, setPendingChallenge] = useState<ChallengeParams | null>(null);
   const [colorScheme, setColorScheme] = useState<ColorSchemeType | undefined>(undefined);
   const { fetchUser, stats } = useUser();
+  const { dispatch } = useGame();
   const { initQuests } = useQuests();
 
   useEffect(() => {
@@ -59,6 +63,9 @@ const App: React.FC = () => {
   useEffect(() => {
     fetchUser();
     bridge.send('VKWebAppShowBannerAd', { banner_location: BannerAdLocation.BOTTOM });
+    // Check for incoming challenge
+    const challenge = parseChallengeFromSearch();
+    if (challenge) setPendingChallenge(challenge);
   }, []);
 
   useEffect(() => {
@@ -82,9 +89,23 @@ const App: React.FC = () => {
 
   const [onboardingDone, setOnboardingDone] = useState(false);
 
+  const handleAcceptChallenge = () => {
+    if (!pendingChallenge) return;
+    dispatch({ type: 'START_GAME', category: pendingChallenge.category as any });
+    setPendingChallenge(null);
+    goToPanel('game');
+  };
+
   return (
     <>
       {!onboardingDone && <OnboardingGuide onComplete={() => setOnboardingDone(true)} />}
+      {pendingChallenge && (
+        <ChallengeModal
+          challenge={pendingChallenge}
+          onAccept={handleAcceptChallenge}
+          onDecline={() => setPendingChallenge(null)}
+        />
+      )}
       <ConfigProvider platform={platform()} colorScheme={colorScheme}>
         <AppRoot mode="embedded">
         <Epic activeStory={activeStory} tabbar={

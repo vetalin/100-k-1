@@ -6,6 +6,7 @@ import { useAchievements } from '../store/AchievementContext';
 import { useTournament } from '../store/TournamentContext';
 import { generateStoryImage } from '../utils/storyImage';
 import bridge from '@vkontakte/vk-bridge';
+import { buildChallengeLink } from '../utils/challenge';
 
 interface Props {
   onPlayAgain: () => void;
@@ -119,6 +120,29 @@ const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard, onReview }) 
     onPlayAgain();
   };
 
+  const handleChallenge = async () => {
+    try {
+      const friends = await bridge.send('VKWebAppGetFriends', { multi: false } as any);
+      if (!friends?.users?.length) return;
+      const friendId = friends.users[0].id;
+      const myName = user ? `${user.first_name} ${user.last_name}` : 'Игрок';
+      const link = buildChallengeLink({
+        category: state.selectedCategory ?? 'all',
+        seed: state.dateSeed,
+        round: state.currentRound,
+        score: state.score,
+        fromId: user?.id ?? 0,
+        fromName: myName,
+      });
+      await (bridge as any).send('VKWebAppSendVKMessages', {
+        to: [{ id: friendId }],
+        message: `${myName} набрал ${state.score.toLocaleString()} очков в 100 к 1! Попробуй побить: ${link}`,
+      } as any);
+    } catch (e) {
+      // User cancelled or permission denied — silently ignore
+    }
+  };
+
   return (
     <Div style={{ paddingBottom: 66 }}>
       <Card mode="shadow" style={{ padding: 24, textAlign: 'center', marginBottom: 16 }}>
@@ -193,6 +217,10 @@ const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard, onReview }) 
           </Button>
         </>
       )}
+      <Spacing size={12} />
+      <Button size="l" mode="outline" stretched onClick={handleChallenge}>
+        ⚔️ Бросить вызов другу
+      </Button>
     </Div>
   );
 };
