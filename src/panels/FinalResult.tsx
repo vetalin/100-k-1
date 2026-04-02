@@ -75,9 +75,7 @@ const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard }) => {
         <Title level="1" style={{ marginTop: 16 }}>
           🏆 {state.score} очков
         </Title>
-        <Text style={{ color: 'var(--vkui--color_text_secondary)' }}>
-          Место в рейтинге: #1
-        </Text>
+
       </Card>
 
       <CardGrid size="s" style={{ marginBottom: 16 }}>

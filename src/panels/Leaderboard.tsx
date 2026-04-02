@@ -42,7 +42,7 @@ const Leaderboard: React.FC = () => {
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [friendsState, setFriendsState] = useState<FriendsState>('loading');
   const [myPlace, setMyPlace] = useState<number>(0);
-  const [global] = useState<LeaderboardEntry[]>(MOCK_LEADERBOARD);
+
 
   useEffect(() => {
     if (activeTab === 'friends') {
@@ -59,8 +59,16 @@ const Leaderboard: React.FC = () => {
     setFriendsState('loading');
 
     try {
-      // 1. Получить VK Auth Token
-      const token = await bridge.send('VKWebAppGetAuthToken', { app_id: 0, scope: 'friends' });
+      // 1. Получить VK Auth Token (app_id должен быть установлен в VK Developer Console)
+      // Если app_id не настроен — используем mock-данные
+      const userInfo = await bridge.send('VKWebAppGetUserInfo');
+      const appId = (userInfo as any).app_id || 0;
+      if (!appId) {
+        console.warn('VK App ID not configured, using mock leaderboard');
+        setFriendsState('mock');
+        return;
+      }
+      const token = await bridge.send('VKWebAppGetAuthToken', { app_id: appId, scope: 'friends' });
 
       // 2. Получить друзей в приложении
       const friendIdsResponse: any = await bridge.send('VKWebAppCallAPIMethod', {
@@ -134,22 +142,7 @@ const Leaderboard: React.FC = () => {
     }
   };
 
-  const handleSaveScore = async () => {
-    if (!user) return;
-    try {
-      await bridge.send('VKWebAppStorageSet', {
-        key: `lb_${user.id}`,
-        value: JSON.stringify({
-          score: stats.totalScore,
-          gamesPlayed: stats.gamesPlayed,
-          streak: stats.streak,
-          updatedAt: Date.now()
-        })
-      });
-    } catch (e) {
-      console.error('Failed to save score:', e);
-    }
-  };
+
 
   const medalEmoji = (place: number) => {
     if (place === 1) return '🥇';
@@ -314,30 +307,17 @@ const Leaderboard: React.FC = () => {
   const renderGlobalTab = () => {
     return (
       <Div>
-        <Text style={{ color: 'var(--vkui--color_text_secondary)', textAlign: 'center', marginBottom: 16 }}>
-          Глобальный рейтинг — скоро
-        </Text>
-        <Group header={<Title level="3">Все игроки</Title>}>
-          {global.slice(0, 3).map((entry) => (
-            <Card key={entry.user.id} mode="shadow" style={{ padding: 16, marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ fontSize: 28, width: 40, textAlign: 'center' }}>
-                  {medalEmoji(entry.place)}
-                </div>
-                <Avatar src={entry.user.photo_200} size={48} />
-                <div style={{ flex: 1 }}>
-                  <Text>
-                    {entry.user.first_name} {entry.user.last_name}
-                  </Text>
-                  <Text style={{ color: 'var(--vkui--color_text_secondary)' }}>
-                    #{entry.place} место
-                  </Text>
-                </div>
-                <Title level="2">{entry.score}</Title>
-              </div>
-            </Card>
-          ))}
-        </Group>
+        <Card mode="shadow" style={{ padding: 24, textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>🌍</div>
+          <Title level="2" style={{ marginBottom: 8 }}>Глобальный рейтинг</Title>
+          <Text style={{ color: 'var(--vkui--color_text_secondary)' }}>
+            Скоро здесь появится таблица лидеров среди всех игроков VK!
+          </Text>
+          <Spacing size={16} />
+          <Text style={{ color: 'var(--vkui--color_text_secondary)' }}>
+            Приглашай друзей — чем больше игроков, тем интереснее 🎉
+          </Text>
+        </Card>
       </Div>
     );
   };
@@ -363,19 +343,7 @@ const Leaderboard: React.FC = () => {
 
       {activeTab === 'friends' ? renderFriendsTab() : renderGlobalTab()}
 
-      <Spacing size={16} />
 
-      <Button
-        size="l"
-        stretched
-        onClick={handleSaveScore}
-        style={{
-          background: 'linear-gradient(135deg, #2688EB 0%, #1a6dc7 100%)',
-          color: '#fff',
-        }}
-      >
-        💾 Сохранить результат
-      </Button>
     </Div>
   );
 };
