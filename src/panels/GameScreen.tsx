@@ -5,7 +5,7 @@ import { Icon24LightbulbOutline, Icon24CheckCircleOutline, Icon24Cancel } from '
 import { useGame } from '../store/GameContext';
 import { useSettings } from '../store/SettingsContext';
 import { useUser } from '../store/UserContext';
-import { updateCategoryStats, CategoryStatsMap } from '../utils/categoryStats';
+import { updateCategoryStats, CategoryStatsMap, pushAnswerHistory } from '../utils/categoryStats';
 
 interface Props {
   onRoundEnd: () => void;
@@ -79,6 +79,7 @@ const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
         catch { stats = {} as CategoryStatsMap; }
         const updated = updateCategoryStats(stats, currentQuestion.category, correct);
         bridge.send('VKWebAppStorageSet', { key, value: JSON.stringify(updated) });
+        pushAnswerHistory(user.id, currentQuestion.category, correct);
       }).catch(() => {});
     }
 

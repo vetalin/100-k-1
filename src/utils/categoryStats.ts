@@ -84,3 +84,83 @@ export function getCategoryName(category: Category): string {
 export function getStorageKey(userId: number): string {
   return `${STORAGE_KEY_PREFIX}${userId}`;
 }
+
+export type TrendDirection = 'improving' | 'declining' | 'stable';
+
+export interface WeakCategoryInfo {
+  category: Category;
+  accuracy: number;         // 0-100
+  totalAnswered: number;
+  trend: TrendDirection;
+  emoji: string;
+  name: string;
+}
+
+const HISTORY_KEY_PREFIX = 'cat_hist_';
+const HISTORY_LENGTH = 10;
+const WEAK_THRESHOLD = 65;
+const MIN_ANSWERS_FOR_TREND = 4;
+
+export function getHistoryStorageKey(userId: number, category: Category): string {
+  return `${HISTORY_KEY_PREFIX}${category}_${userId}`;
+}
+
+export function pushAnswerHistory(userId: number, category: Category, correct: boolean): void {
+  try {
+    const key = getHistoryStorageKey(userId, category);
+    const raw = localStorage.getItem(key);
+    const history: boolean[] = raw ? JSON.parse(raw) : [];
+    history.push(correct);
+    if (history.length > HISTORY_LENGTH) history.shift();
+    localStorage.setItem(key, JSON.stringify(history));
+  } catch {}
+}
+
+export function getCategoryTrend(userId: number, category: Category): TrendDirection {
+  try {
+    const key = getHistoryStorageKey(userId, category);
+    const raw = localStorage.getItem(key);
+    if (!raw) return 'stable';
+    const history: boolean[] = JSON.parse(raw);
+    if (history.length < MIN_ANSWERS_FOR_TREND) return 'stable';
+
+    const half = Math.floor(history.length / 2);
+    const recent = history.slice(-half);
+    const older = history.slice(0, half);
+
+    const avgRecent = recent.filter(Boolean).length / recent.length;
+    const avgOlder = older.filter(Boolean).length / older.length;
+
+    const diff = avgRecent - avgOlder;
+    if (diff > 0.1) return 'improving';
+    if (diff < -0.1) return 'declining';
+    return 'stable';
+  } catch {
+    return 'stable';
+  }
+}
+
+export function getWeakCategoryInfos(
+  stats: CategoryStatsMap,
+  userId: number
+): WeakCategoryInfo[] {
+  return (Object.values(stats) as CategoryStat[])
+    .filter(s => s.totalAnswered >= 5 && s.correctRate < WEAK_THRESHOLD)
+    .sort((a, b) => a.correctRate - b.correctRate)
+    .slice(0, 2)
+    .map(s => ({
+      category: s.category,
+      accuracy: s.correctRate,
+      totalAnswered: s.totalAnswered,
+      trend: getCategoryTrend(userId, s.category),
+      emoji: getCategoryEmoji(s.category),
+      name: getCategoryName(s.category),
+    }));
+}
+
+export function getStrongCategories(stats: CategoryStatsMap): Category[] {
+  return (Object.values(stats) as CategoryStat[])
+    .filter(isStrongCategory)
+    .sort((a, b) => b.correctRate - a.correctRate)
+    .map(s => s.category);
+}

@@ -21,6 +21,7 @@ import { QuestProvider, useQuests } from './store/QuestContext';
 import { SeasonProvider } from './store/SeasonContext';
 import QuestsScreen from './panels/QuestsScreen';
 import SeasonScreen from './panels/SeasonScreen';
+import { questions } from './data/questions';
 import ChallengeModal from './components/ChallengeModal';
 import { parseChallengeFromSearch, ChallengeParams } from './utils/challenge';
 import { UserProvider, useUser } from './store/UserContext';
@@ -139,7 +140,7 @@ const App: React.FC = () => {
           <View id="home" activePanel={activePanel}>
             <Panel id="start">
               <PanelHeader transparent shadow={false}>100 к 1</PanelHeader>
-              <StartScreen onStartGame={() => goToPanel('game')} onOpenLeaderboard={() => handleStoryChange('leaderboard')} onOpenQuests={() => goToPanel('quests')} />
+              <StartScreen onStartGame={() => goToPanel('game')} onOpenLeaderboard={() => handleStoryChange('leaderboard')} onOpenQuests={() => goToPanel('quests')} onTrainCategory={(cat) => { const filtered = (questions as any[]).filter((q: any) => q.category === cat).slice(0, 5); if (filtered.length) { setMiniRoundQuestions(filtered); goToPanel('mini_round'); } }} />
             </Panel>
             <Panel id="game">
               <PanelHeader transparent shadow={false} delimiter="none">Вопрос</PanelHeader>

@@ -9,6 +9,7 @@ import { isChallengeCompleted } from '../utils/dailyChallenge';
 import { getTournamentTimeLeft } from '../utils/tournament';
 import {
   CategoryStatsMap,
+  getWeakCategoryInfos,
   getEmptyCategoryStats,
   getStorageKey,
   isWeakCategory,
@@ -20,6 +21,7 @@ interface Props {
   onStartGame: () => void;
   onOpenLeaderboard: () => void;
   onOpenQuests?: () => void;
+  onTrainCategory?: (category: string) => void;
 }
 
 const CATEGORIES: { id: Category; emoji: string; name: string }[] = [
@@ -31,7 +33,7 @@ const CATEGORIES: { id: Category; emoji: string; name: string }[] = [
   { id: 'love', emoji: '❤️', name: 'Любовь' },
 ];
 
-const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard, onOpenQuests }) => {
+const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard, onOpenQuests, onTrainCategory }) => {
   const { dispatch } = useGame();
   const { user, stats } = useUser();
   const { tournament, isTournament, multiplier } = useTournament();
@@ -97,6 +99,39 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard, onOpenQu
           </div>
         )}
       </Card>
+
+      {/* Weak Categories Block */}
+      {(() => {
+        if (!user || !catStats) return null;
+        const weakInfos = getWeakCategoryInfos(catStats, user.id);
+        if (weakInfos.length === 0) return null;
+        return (
+          <Card mode="shadow" style={{ marginBottom: 12, padding: 14 }}>
+            <Title level="3" style={{ marginBottom: 10 }}>📊 Твои слабые места</Title>
+            {weakInfos.map(info => {
+              const trendIcon = info.trend === 'improving' ? '↗' : info.trend === 'declining' ? '↘' : '→';
+              const trendColor = info.trend === 'improving' ? '#4BB34A' : info.trend === 'declining' ? '#E64646' : 'var(--vkui--color_text_secondary)';
+              return (
+                <div key={info.category} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 20 }}>{info.emoji}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Text weight="3" style={{ fontSize: 14 }}>{info.name}</Text>
+                      <span style={{ color: trendColor, fontSize: 14 }}>{trendIcon}</span>
+                    </div>
+                    <Text style={{ color: 'var(--vkui--color_text_secondary)', fontSize: 12 }}>
+                      {info.accuracy}% точности ({info.totalAnswered} ответов)
+                    </Text>
+                  </div>
+                  <Button size="s" mode="outline" onClick={() => onTrainCategory?.(info.category)}>
+                    Тренировать
+                  </Button>
+                </div>
+              );
+            })}
+          </Card>
+        );
+      })()}
 
       {/* Daily Challenge Card */}
       {!challengeDone && (
