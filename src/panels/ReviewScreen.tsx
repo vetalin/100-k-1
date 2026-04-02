@@ -1,12 +1,14 @@
 import React from 'react';
 import { Div, Button, Card, Text, Title, Group, Spacing } from '@vkontakte/vkui';
 import { useGame } from '../store/GameContext';
+import type { Question } from '../types/index';
 
 interface Props {
   onBack: () => void;
+  onMiniRound?: (questions: Question[]) => void;
 }
 
-const ReviewScreen: React.FC<Props> = ({ onBack }) => {
+const ReviewScreen: React.FC<Props> = ({ onBack, onMiniRound }) => {
   const { state } = useGame();
 
   const wrongAnswers = state.userAnswers.filter(a => !a.correct);
@@ -16,7 +18,7 @@ const ReviewScreen: React.FC<Props> = ({ onBack }) => {
         ?? state.questions.find(q => q.id === a.questionId);
       return q ? { question: q, chosen: a.answerIndex } : null;
     })
-    .filter(Boolean) as { question: NonNullable<typeof state.questions[0]>; chosen: number }[];
+    .filter(Boolean) as { question: Question; chosen: number }[];
 
   if (wrongQuestions.length === 0) {
     return (
@@ -27,13 +29,21 @@ const ReviewScreen: React.FC<Props> = ({ onBack }) => {
           Ты ответил на все вопросы правильно.
         </Text>
         <Spacing size={24} />
-        <Button size="l" stretched onClick={onBack}>← Назад</Button>
+        {onMiniRound && (
+          <>
+            <Button size="l" mode="primary" stretched onClick={() => onMiniRound(state.roundQuestions.slice(0, 3))}>
+              📚 Мини-раунд на 3 вопроса
+            </Button>
+            <Spacing size={12} />
+          </>
+        )}
+        <Button size="l" mode="outline" stretched onClick={onBack}>← Назад</Button>
       </Div>
     );
   }
 
   return (
-    <Div style={{ paddingBottom: 66 }}>
+    <Div style={{ paddingBottom: 80 }}>
       <Div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
         <Button mode="tertiary" onClick={onBack}>← Назад</Button>
         <Title level="2">🔄 Разбор ошибок</Title>
@@ -93,7 +103,20 @@ const ReviewScreen: React.FC<Props> = ({ onBack }) => {
         </Group>
       ))}
 
-      <Button size="l" stretched onClick={onBack} style={{ marginTop: 8 }}>
+      {onMiniRound && (
+        <>
+          <Button
+            size="l"
+            mode="primary"
+            stretched
+            onClick={() => onMiniRound(wrongQuestions.map(w => w.question))}
+            style={{ marginBottom: 12 }}
+          >
+            🔁 Пройти ещё раз ({wrongQuestions.length} вопросов)
+          </Button>
+        </>
+      )}
+      <Button size="l" mode="outline" stretched onClick={onBack}>
         ← Назад к результатам
       </Button>
     </Div>

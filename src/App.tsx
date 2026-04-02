@@ -27,6 +27,7 @@ import GameScreen from './panels/GameScreen';
 import RoundResult from './panels/RoundResult';
 import FinalResult from './panels/FinalResult';
 import ReviewScreen from './panels/ReviewScreen';
+import MiniRoundScreen from './panels/MiniRoundScreen';
 import TournamentResult from './panels/TournamentResult';
 import Leaderboard from './panels/Leaderboard';
 import Categories from './panels/Categories';
@@ -35,11 +36,12 @@ import Profile from './panels/Profile';
 import './App.css';
 import OnboardingGuide from './components/OnboardingGuide';
 
-type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'tournament_result' | 'leaderboard' | 'categories' | 'profile' | 'review';
+type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'tournament_result' | 'leaderboard' | 'categories' | 'profile' | 'review' | 'mini_round';
 
 const App: React.FC = () => {
   const [activePanel, setActivePanel] = useState<ActivePanel>('start');
   const [activeStory, setActiveStory] = useState('home');
+  const [miniRoundQuestions, setMiniRoundQuestions] = useState<import('./types/index').Question[]>([]);
   const [colorScheme, setColorScheme] = useState<ColorSchemeType | undefined>(undefined);
   const { fetchUser } = useUser();
 
@@ -118,7 +120,14 @@ const App: React.FC = () => {
             <Panel id="final_result">
               <PanelHeader transparent shadow={false}>Итоги</PanelHeader>
               <FinalResult onPlayAgain={() => goToPanel('start')} onLeaderboard={() => handleStoryChange('leaderboard')} onReview={() => goToPanel('review')} />
-              <ReviewScreen onBack={() => goToPanel('final_result')} />
+              <ReviewScreen
+                onBack={() => goToPanel('final_result')}
+                onMiniRound={(qs) => { setMiniRoundQuestions(qs); goToPanel('mini_round'); }}
+              />
+              <MiniRoundScreen
+                questions={miniRoundQuestions}
+                onFinish={() => goToPanel('review')}
+              />
             </Panel>
             <Panel id="tournament_result">
               <PanelHeader transparent shadow={false}>Результаты турнира</PanelHeader>
