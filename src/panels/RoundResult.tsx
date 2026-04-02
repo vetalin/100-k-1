@@ -3,6 +3,7 @@ import { Div, Button, Card, Text, Title, Group, Spacing, CardGrid } from '@vkont
 import { Icon24CheckCircleOutline, Icon24Cancel } from '@vkontakte/icons';
 import bridge, { EAdsFormats } from '@vkontakte/vk-bridge';
 import { useGame } from '../store/GameContext';
+import { useAchievements } from '../store/AchievementContext';
 
 interface Props {
   onNextRound: () => void;
@@ -11,8 +12,14 @@ interface Props {
 
 const RoundResult: React.FC<Props> = ({ onNextRound, onFinalResult }) => {
   const { state, dispatch } = useGame();
+  const { checkPerfectRound } = useAchievements();
 
   useEffect(() => {
+    // Check perfect round achievement (5/5 correct)
+    if (correctAnswers === totalAnswers && totalAnswers === 5) {
+      checkPerfectRound();
+    }
+
     setTimeout(() => {
       bridge.send('VKWebAppShowNativeAds', { ad_format: EAdsFormats.INTERSTITIAL }).catch(() => {});
     }, 1500);

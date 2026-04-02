@@ -1,11 +1,13 @@
 import React from 'react';
-import { Div, Card, Avatar, Text, Title, Group, Spacing, Button, Div as DivGroup, Snackbar } from '@vkontakte/vkui';
+import { Div, Card, Avatar, Text, Title, Group, Spacing, Button, Snackbar, Badge } from '@vkontakte/vkui';
 import { useUser } from '../store/UserContext';
+import { useAchievements } from '../store/AchievementContext';
 import { useState } from 'react';
 import bridge from '@vkontakte/vk-bridge';
 
 const Profile: React.FC = () => {
   const { user, stats } = useUser();
+  const { achievements, unlockedCount } = useAchievements();
   const [showSnackbar, setShowSnackbar] = useState(false);
 
   const handleBuyPro = async () => {
@@ -16,7 +18,7 @@ const Profile: React.FC = () => {
   const handleShare = async () => {
     try {
       await bridge.send('VKWebAppShowWallPostBox', {
-        message: `Мой профиль в 100 к 1:\n🎯 Игр: ${stats.gamesPlayed}\n🏆 Очки: ${stats.totalScore}\n🔥 Серия: ${stats.streak} дней`
+        message: `Мой профиль в 100 к 1:\n🎯 Игр: ${stats.gamesPlayed}\n🏆 Очки: ${stats.totalScore}\n🔥 Серия: ${stats.streak} дней\n\n🏅 Достижений: ${unlockedCount}/8`
       });
     } catch (e) {
       console.log('Share cancelled');
@@ -61,39 +63,28 @@ const Profile: React.FC = () => {
       <Spacing size={16} />
 
       <Group header={<Title level="2">Достижения</Title>}>
-        <Card mode="shadow" style={{ padding: 16 }}>
-          <DivGroup style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 0 }}>
-            <div style={{ fontSize: 32 }}>🌟</div>
-            <div>
-              <Text>Первая игра</Text>
-              <Text style={{ fontSize: 12, color: 'var(--vkui--color_text_secondary)' }}>
-                Сыграть первую игру
+        <Badge mode="prominent" style={{ marginBottom: 12 }}>
+          {unlockedCount}/8 достижений
+        </Badge>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          {achievements.map(a => (
+            <Card
+              key={a.id}
+              mode={a.unlockedAt ? 'shadow' : 'outline'}
+              style={{
+                padding: 8,
+                textAlign: 'center',
+                opacity: a.unlockedAt ? 1 : 0.4,
+                border: a.unlockedAt ? '2px solid #E3A008' : '1px dashed #999',
+              }}
+            >
+              <div style={{ fontSize: 28 }}>{a.emoji}</div>
+              <Text style={{ fontSize: 9, marginTop: 2, display: 'block' }}>
+                {a.unlockedAt ? a.title : '???'}
               </Text>
-            </div>
-          </DivGroup>
-        </Card>
-        <Card mode="shadow" style={{ padding: 16, marginTop: 8 }}>
-          <DivGroup style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 0 }}>
-            <div style={{ fontSize: 32 }}>🎯</div>
-            <div>
-              <Text>10 верных подряд</Text>
-              <Text style={{ fontSize: 12, color: 'var(--vkui--color_text_secondary)' }}>
-                Далеко, но можно!
-              </Text>
-            </div>
-          </DivGroup>
-        </Card>
-        <Card mode="shadow" style={{ padding: 16, marginTop: 8 }}>
-          <DivGroup style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 0 }}>
-            <div style={{ fontSize: 32 }}>👑</div>
-            <div>
-              <Text>1000 очков</Text>
-              <Text style={{ fontSize: 12, color: 'var(--vkui--color_text_secondary)' }}>
-                Набрать 1000 очков
-              </Text>
-            </div>
-          </DivGroup>
-        </Card>
+            </Card>
+          ))}
+        </div>
       </Group>
 
       <Spacing size={24} />

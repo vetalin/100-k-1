@@ -2,6 +2,7 @@ import React from 'react';
 import { Div, Button, Card, Text, Title, Group, Spacing, Avatar, CardGrid } from '@vkontakte/vkui';
 import { useGame } from '../store/GameContext';
 import { useUser } from '../store/UserContext';
+import { useAchievements } from '../store/AchievementContext';
 import bridge from '@vkontakte/vk-bridge';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard }) => {
   const { state, dispatch } = useGame();
   const { user, stats, updateStats } = useUser();
+  const { checkAndUnlock } = useAchievements();
 
   const correctAnswers = state.userAnswers.filter(a => a.correct).length;
   const totalAnswers = state.userAnswers.length;
@@ -22,9 +24,32 @@ const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard }) => {
   React.useEffect(() => {
     const newGamesPlayed = stats.gamesPlayed + 1;
     const newBestScore = Math.max(stats.bestScore, state.score);
+
+    // Calculate streak
+    const today = new Date().toISOString().split('T')[0];
+    const lastPlayed = stats.lastPlayedDate;
+    let newStreak = 1;
+    if (lastPlayed) {
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      if (lastPlayed === yesterday) {
+        newStreak = (stats.streak || 0) + 1;
+      } else if (lastPlayed === today) {
+        newStreak = stats.streak || 1;
+      }
+    }
+
     updateStats({
       gamesPlayed: newGamesPlayed,
       totalScore: stats.totalScore + state.score,
+      bestScore: newBestScore,
+      streak: newStreak,
+      lastPlayedDate: today,
+    });
+
+    // Check achievements
+    checkAndUnlock({
+      gamesPlayed: newGamesPlayed,
+      streak: newStreak,
       bestScore: newBestScore,
     });
 
@@ -35,7 +60,7 @@ const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard }) => {
         value: JSON.stringify({
           score: state.score,
           gamesPlayed: newGamesPlayed,
-          streak: stats.streak,
+          streak: newStreak,
           updatedAt: Date.now()
         })
       }).catch(e => console.error('Failed to save leaderboard score:', e));
