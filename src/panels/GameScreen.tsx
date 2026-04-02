@@ -1,7 +1,10 @@
+import bridge from '@vkontakte/vk-bridge';
 import React, { useState, useEffect } from 'react';
 import { Div, Button, Card, Progress, Text, Title, Group, Spacing, FixedLayout } from '@vkontakte/vkui';
 import { Icon24LightbulbOutline, Icon24CheckCircleOutline, Icon24Cancel } from '@vkontakte/icons';
 import { useGame } from '../store/GameContext';
+import { useUser } from '../store/UserContext';
+import { updateCategoryStats, CategoryStatsMap } from '../utils/categoryStats';
 
 interface Props {
   onRoundEnd: () => void;
@@ -9,6 +12,7 @@ interface Props {
 
 const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
   const { state, dispatch } = useGame();
+  const { user } = useUser();
   const [timer, setTimer] = useState(15);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
@@ -57,6 +61,19 @@ const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
     setSelectedAnswer(index);
     setRevealed(true);
     dispatch({ type: 'SELECT_ANSWER', answerIndex: index });
+
+    // Save category stats
+    if (user && currentQuestion && currentQuestion.category) {
+      const correct = index === 0;
+      const key = `cat_stat_${user.id}`;
+      bridge.send('VKWebAppStorageGet', { keys: [key] }).then((result: any) => {
+        let stats: CategoryStatsMap;
+        try { stats = JSON.parse(result.keys?.[0]?.value || '{}'); }
+        catch { stats = {} as CategoryStatsMap; }
+        const updated = updateCategoryStats(stats, currentQuestion.category, correct);
+        bridge.send('VKWebAppStorageSet', { key, value: JSON.stringify(updated) });
+      }).catch(() => {});
+    }
 
     setTimeout(() => {
       if (state.currentQuestionIndex >= state.questionsPerRound - 1) {
