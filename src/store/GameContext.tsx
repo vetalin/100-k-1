@@ -66,7 +66,8 @@ function getQuestionsForRound(category: Category | null, allQuestions: Question[
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'START_GAME': {
-      const roundQuestions = getQuestionsForRound(state.selectedCategory, state.questions);
+      const category = action.category ?? state.selectedCategory;
+      const roundQuestions = getQuestionsForRound(category, state.questions);
       return {
         ...state,
         currentRound: 1,

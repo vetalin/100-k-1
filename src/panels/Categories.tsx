@@ -31,8 +31,10 @@ const Categories: React.FC<Props> = ({ onSelectCategory }) => {
   };
 
   const handleRandom = () => {
-    dispatch({ type: 'SELECT_CATEGORY', category: 'food' as Category });
-    dispatch({ type: 'START_GAME' });
+    const CATEGORIES_LIST = ['food', 'people', 'animals', 'school', 'work', 'love'] as const;
+    const randomCategory = CATEGORIES_LIST[Math.floor(Math.random() * CATEGORIES_LIST.length)];
+    dispatch({ type: 'SELECT_CATEGORY', category: randomCategory });
+    dispatch({ type: 'START_GAME', category: randomCategory });
     onSelectCategory();
   };
 

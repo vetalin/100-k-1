@@ -10,7 +10,7 @@ interface Props {
 }
 
 const RoundResult: React.FC<Props> = ({ onNextRound, onFinalResult }) => {
-  const { state } = useGame();
+  const { state, dispatch } = useGame();
 
   useEffect(() => {
     setTimeout(() => {
@@ -26,8 +26,10 @@ const RoundResult: React.FC<Props> = ({ onNextRound, onFinalResult }) => {
 
   const handleNext = async () => {
     if (state.currentRound >= state.totalRounds) {
+      dispatch({ type: 'END_ROUND' });
       onFinalResult();
     } else {
+      dispatch({ type: 'END_ROUND' });
       onNextRound();
     }
   };

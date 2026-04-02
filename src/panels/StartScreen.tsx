@@ -5,7 +5,7 @@ import { useUser } from '../store/UserContext';
 
 interface Props {
   onStartGame: () => void;
-  onOpenCategories: () => void;
+  onOpenLeaderboard: () => void;
 }
 
 const CATEGORIES = [
@@ -17,7 +17,7 @@ const CATEGORIES = [
   { id: 'love' as const, emoji: '❤️', name: 'Любовь', count: 10 },
 ];
 
-const StartScreen: React.FC<Props> = ({ onStartGame, onOpenCategories }) => {
+const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
   const { dispatch } = useGame();
   const { stats } = useUser();
 
@@ -25,6 +25,8 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenCategories }) => {
     dispatch({ type: 'START_GAME' });
     onStartGame();
   };
+
+
 
   const handleCategorySelect = (categoryId: 'food' | 'people' | 'animals' | 'school' | 'work' | 'love') => {
     dispatch({ type: 'SELECT_CATEGORY', category: categoryId });
@@ -94,8 +96,8 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenCategories }) => {
 
       <Spacing size={12} />
 
-      <Button size="l" stretched mode="outline" onClick={onOpenCategories}>
-        📋 Все категории
+      <Button size="l" stretched mode="outline" onClick={onOpenLeaderboard}>
+        🏆 Таблица лидеров
       </Button>
     </Div>
   );

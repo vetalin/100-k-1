@@ -27,6 +27,19 @@ const FinalResult: React.FC<Props> = ({ onPlayAgain, onLeaderboard }) => {
       totalScore: stats.totalScore + state.score,
       bestScore: newBestScore,
     });
+
+    // Сохранить результат в VK Storage для таблицы лидеров
+    if (user) {
+      bridge.send('VKWebAppStorageSet', {
+        key: `lb_${user.id}`,
+        value: JSON.stringify({
+          score: state.score,
+          gamesPlayed: newGamesPlayed,
+          streak: stats.streak,
+          updatedAt: Date.now()
+        })
+      }).catch(e => console.error('Failed to save leaderboard score:', e));
+    }
   }, []);
 
   const handleShare = async () => {

@@ -95,7 +95,7 @@ const App: React.FC = () => {
           <View id="home" activePanel={activePanel}>
             <Panel id="start">
               <PanelHeader transparent shadow={false}>100 к 1</PanelHeader>
-              <StartScreen onStartGame={() => goToPanel('game')} onOpenCategories={() => goToPanel('categories')} />
+              <StartScreen onStartGame={() => goToPanel('game')} onOpenLeaderboard={() => handleStoryChange('leaderboard')} />
             </Panel>
             <Panel id="game">
               <PanelHeader transparent shadow={false} delimiter="none">Вопрос</PanelHeader>
