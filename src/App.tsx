@@ -32,6 +32,7 @@ import Categories from './panels/Categories';
 import Profile from './panels/Profile';
 
 import './App.css';
+import OnboardingGuide from './components/OnboardingGuide';
 
 type ActivePanel = 'start' | 'game' | 'round_result' | 'final_result' | 'tournament_result' | 'leaderboard' | 'categories' | 'profile';
 
@@ -67,9 +68,13 @@ const App: React.FC = () => {
     setActiveStory('home');
   };
 
+  const [onboardingDone, setOnboardingDone] = useState(false);
+
   return (
-    <ConfigProvider platform={platform()} colorScheme={colorScheme}>
-      <AppRoot mode="embedded">
+    <>
+      {!onboardingDone && <OnboardingGuide onComplete={() => setOnboardingDone(true)} />}
+      <ConfigProvider platform={platform()} colorScheme={colorScheme}>
+        <AppRoot mode="embedded">
         <Epic activeStory={activeStory} tabbar={
           <Tabbar>
             <TabbarItem
@@ -140,8 +145,9 @@ const App: React.FC = () => {
           </View>
         </Epic>
       </AppRoot>
-    </ConfigProvider>
-  );
+      </ConfigProvider>
+      </>
+    );
 };
 
 const AppWrapper: React.FC = () => (
