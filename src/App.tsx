@@ -59,9 +59,8 @@ const App: React.FC = () => {
 
   const goToPanel = (panel: ActivePanel) => {
     setActivePanel(panel);
-    if (['start', 'game', 'round_result', 'final_result', 'categories'].includes(panel)) {
-      setActiveStory('home');
-    }
+    // Always stay in home story for game flow panels
+    setActiveStory('home');
   };
 
   return (
@@ -92,7 +91,8 @@ const App: React.FC = () => {
             </TabbarItem>
           </Tabbar>
         }>
-          <View id="main" activePanel={activePanel}>
+          {/* Home story: game flow panels */}
+          <View id="home" activePanel={activePanel}>
             <Panel id="start">
               <PanelHeader transparent shadow={false}>100 к 1</PanelHeader>
               <StartScreen onStartGame={() => goToPanel('game')} onOpenCategories={() => goToPanel('categories')} />
@@ -107,17 +107,25 @@ const App: React.FC = () => {
             </Panel>
             <Panel id="final_result">
               <PanelHeader transparent shadow={false}>Итоги</PanelHeader>
-              <FinalResult onPlayAgain={() => goToPanel('start')} onLeaderboard={() => goToPanel('leaderboard')} />
+              <FinalResult onPlayAgain={() => goToPanel('start')} onLeaderboard={() => handleStoryChange('leaderboard')} />
             </Panel>
             <Panel id="categories">
               <PanelHeader transparent shadow={false}>Категории</PanelHeader>
               <Categories onSelectCategory={() => goToPanel('game')} />
             </Panel>
-            <Panel id="leaderboard">
+          </View>
+
+          {/* Leaderboard story */}
+          <View id="leaderboard" activePanel="leaderboard_main">
+            <Panel id="leaderboard_main">
               <PanelHeader transparent shadow={false}>Рейтинг</PanelHeader>
               <Leaderboard />
             </Panel>
-            <Panel id="profile">
+          </View>
+
+          {/* Profile story */}
+          <View id="profile" activePanel="profile_main">
+            <Panel id="profile_main">
               <PanelHeader transparent shadow={false}>Профиль</PanelHeader>
               <Profile />
             </Panel>
