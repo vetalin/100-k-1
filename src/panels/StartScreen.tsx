@@ -4,6 +4,8 @@ import bridge from '@vkontakte/vk-bridge';
 import { useGame } from '../store/GameContext';
 import { useUser } from '../store/UserContext';
 import { useTournament } from '../store/TournamentContext';
+import DailyChallengeModal from '../components/DailyChallengeModal';
+import { isChallengeCompleted } from '../utils/dailyChallenge';
 import { getTournamentTimeLeft } from '../utils/tournament';
 import {
   CategoryStatsMap,
@@ -35,6 +37,8 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
   const timeLeft = getTournamentTimeLeft();
 
   const [catStats, setCatStats] = useState<CategoryStatsMap>(getEmptyCategoryStats());
+  const [showChallenge, setShowChallenge] = useState(false);
+  const [challengeDone, setChallengeDone] = useState(false);
 
   // Load category stats from VK Storage
   useEffect(() => {
@@ -46,6 +50,14 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
           setCatStats(JSON.parse(saved));
         } catch (e) {}
       }
+    });
+  }, [user]);
+
+  // Check if daily challenge is already done
+  useEffect(() => {
+    if (!user) return;
+    isChallengeCompleted(user.id).then(done => {
+      setChallengeDone(done);
     });
   }, [user]);
 
@@ -84,6 +96,18 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
           </div>
         )}
       </Card>
+
+      {/* Daily Challenge Card */}
+      {!challengeDone && (
+        <Card
+          mode="outline"
+          onClick={() => setShowChallenge(true)}
+          style={{ border: '2px solid #FFD700', marginBottom: 12, padding: 12, textAlign: 'center', cursor: 'pointer', background: 'rgba(255,215,0,0.1)' }}
+        >
+          <Title level="3">⚡ Ежедневный вызов</Title>
+          <Text>Ответь на 1 вопрос и получи +100 очков!</Text>
+        </Card>
+      )}
 
       {isTournament && timeLeft && (
         <Card mode="outline" style={{ border: '2px solid #FFD700', marginBottom: 12, padding: 12, textAlign: 'center' }}>
@@ -200,6 +224,19 @@ const StartScreen: React.FC<Props> = ({ onStartGame, onOpenLeaderboard }) => {
       <Button size="l" stretched mode="outline" onClick={onOpenLeaderboard}>
         🏆 Таблица лидеров
       </Button>
+    {/* Daily Challenge Modal */}
+    {showChallenge && (
+      <DailyChallengeModal
+        onComplete={(_correct, bonus) => {
+          setShowChallenge(false);
+          setChallengeDone(true);
+          if (bonus > 0 && stats) {
+            // Bonus is handled internally via localStorage
+          }
+        }}
+        onClose={() => setShowChallenge(false)}
+      />
+    )}
     </Div>
   );
 };
