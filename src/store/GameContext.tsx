@@ -24,7 +24,7 @@ export interface GameState {
 
 type GameAction =
   | { type: 'START_GAME'; category?: Category }
-  | { type: 'SELECT_ANSWER'; answerIndex: number }
+  | { type: 'SELECT_ANSWER'; answerIndex: number; isCorrect: boolean; percent: number }
   | { type: 'NEXT_QUESTION' }
   | { type: 'NEXT_ROUND' }
   | { type: 'END_ROUND' }
@@ -123,8 +123,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SELECT_ANSWER': {
       const currentQuestion = state.roundQuestions[state.currentQuestionIndex];
       if (!currentQuestion) return state;
-      const selectedAnswer = currentQuestion.answers[action.answerIndex];
-      const isCorrect = action.answerIndex === 0;
+      // answerIndex refers to shuffled array; use isCorrect flag from caller
+      const isCorrect = action.isCorrect;
+      const selectedAnswer = { percent: action.percent };
       const newCombo = isCorrect ? state.comboCount + 1 : 0;
       const multiplier = isCorrect ? getComboMultiplier(newCombo) : 1.0;
       const pointsEarned = Math.round((isCorrect ? selectedAnswer.percent : 0) * multiplier);

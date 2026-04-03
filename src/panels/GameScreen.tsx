@@ -1,5 +1,5 @@
 import bridge from '@vkontakte/vk-bridge';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Div, Button, Card, Progress, Text, Title, Group, Spacing, FixedLayout } from '@vkontakte/vkui';
 import { Icon24LightbulbOutline, Icon24CheckCircleOutline, Icon24Cancel } from '@vkontakte/icons';
 import { useGame } from '../store/GameContext';
@@ -22,6 +22,12 @@ const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
   const [hintBought, setHintBought] = useState(false);
 
   const currentQuestion = state.roundQuestions[state.currentQuestionIndex];
+
+  // Shuffle answers so the correct answer isn't always first
+  const shuffledAnswers = useMemo(() => {
+    if (!currentQuestion) return [];
+    return [...currentQuestion.answers].sort(() => Math.random() - 0.5);
+  }, [currentQuestion?.id]);
 
   useEffect(() => {
     setTimer(15);
@@ -47,7 +53,7 @@ const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
   const handleTimeout = () => {
     if (!revealed) {
       setRevealed(true);
-      dispatch({ type: 'SELECT_ANSWER', answerIndex: -1 });
+      dispatch({ type: 'SELECT_ANSWER', answerIndex: -1, isCorrect: false, percent: 0 });
       setTimeout(() => {
         if (state.currentQuestionIndex >= state.questionsPerRound - 1) {
           onRoundEnd();
@@ -62,16 +68,17 @@ const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
     if (revealed) return;
     setSelectedAnswer(index);
     setRevealed(true);
-    dispatch({ type: 'SELECT_ANSWER', answerIndex: index });
-
-    // Sound & vibration feedback
-    const isCorrect = index === 0;
+    // Correct answer = highest votes in shuffled array
+    const maxVotes = Math.max(...currentQuestion.answers.map(a => a.votes));
+    const isCorrect = shuffledAnswers[index]?.votes === maxVotes;
+    const percent = shuffledAnswers[index]?.percent ?? 0;
+    dispatch({ type: 'SELECT_ANSWER', answerIndex: index, isCorrect, percent });
     if (isCorrect) { play('correct'); vibra('correct'); }
     else { play('wrong'); vibra('wrong'); }
 
     // Save category stats
     if (user && currentQuestion && currentQuestion.category) {
-      const correct = index === 0;
+      const correct = shuffledAnswers[index]?.votes === maxVotes;
       const key = `cat_stat_${user.id}`;
       bridge.send('VKWebAppStorageGet', { keys: [key] }).then((result: any) => {
         let stats: CategoryStatsMap;
@@ -141,73 +148,80 @@ const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
         Вопрос {state.currentQuestionIndex + 1} из {state.questionsPerRound}
       </Text>
 
-      <Group>
-        {currentQuestion.answers.map((answer, index) => {
-          const isSelected = selectedAnswer === index;
-          const isRevealed = revealed || hintBought;
-          const isCorrectAnswer = index === 0;
+      {/* Max votes = correct answer (answers are sorted by votes in data, but we shuffle display) */}
+      {(() => {
+        const maxVotes = Math.max(...currentQuestion.answers.map(a => a.votes));
+        return (
+          <Group>
+            {shuffledAnswers.map((answer, index) => {
+              const isSelected = selectedAnswer === index;
+              const isRevealed = revealed || hintBought;
+              const isCorrectAnswer = answer.votes === maxVotes;
 
-          let mode: 'outline' | 'tertiary' = 'outline';
-          let background = undefined;
-          let borderColor = undefined;
+              let mode: 'outline' | 'tertiary' = 'outline';
+              let background = undefined;
+              let borderColor = undefined;
 
-          if (isRevealed) {
-            if (isCorrectAnswer) {
-              background = '#E8F5E9';
-              borderColor = '#4BB34A';
-            } else if (isSelected) {
-              background = '#FFEBEE';
-              borderColor = '#E64646';
-            }
-          } else if (index > 1) {
-            mode = 'tertiary';
-          }
-
-          return (
-            <Div key={index} style={{ padding: '6px 0' }}>
-              <Button
-                size="l"
-                mode={mode}
-                stretched
-                onClick={() => handleAnswer(index)}
-                disabled={revealed}
-                before={
-                  !isRevealed && index > 1 ? (
-                    <span>🔒</span>
-                  ) : isRevealed && isCorrectAnswer ? (
-                    <Icon24CheckCircleOutline style={{ color: '#4BB34A' }} />
-                  ) : isRevealed && isSelected ? (
-                    <Icon24Cancel style={{ color: '#E64646' }} />
-                  ) : undefined
+              if (isRevealed) {
+                if (isCorrectAnswer) {
+                  background = '#E8F5E9';
+                  borderColor = '#4BB34A';
+                } else if (isSelected) {
+                  background = '#FFEBEE';
+                  borderColor = '#E64646';
                 }
-                after={
-                  isRevealed ? (
-                    <span
-                      style={{
-                        background: isCorrectAnswer ? '#4BB34A' : 'var(--vkui--color_text_secondary)',
-                        color: '#fff',
-                        padding: '2px 8px',
-                        borderRadius: 12,
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {answer.percent}%
-                    </span>
-                  ) : undefined
-                }
-                style={{
-                  background,
-                  borderColor,
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                {answer.text}
-              </Button>
-            </Div>
-          );
-        })}
-      </Group>
+              } else if (answer.percent < 15) {
+                mode = 'tertiary';
+              }
+
+              return (
+                <Div key={index} style={{ padding: '6px 0' }}>
+                  <Button
+                    size="l"
+                    mode={mode}
+                    stretched
+                    onClick={() => handleAnswer(index)}
+                    disabled={revealed}
+                    before={
+                      !isRevealed && answer.percent < 15 ? (
+                        <span>🔒</span>
+                      ) : isRevealed && isCorrectAnswer ? (
+                        <Icon24CheckCircleOutline style={{ color: '#4BB34A' }} />
+                      ) : isRevealed && isSelected ? (
+                        <Icon24Cancel style={{ color: '#E64646' }} />
+                      ) : undefined
+                    }
+                    after={
+                      isRevealed ? (
+                        <span
+                          style={{
+                            background: isCorrectAnswer ? '#4BB34A' : 'var(--vkui--color_text_secondary)',
+                            color: '#fff',
+                            padding: '2px 8px',
+                            borderRadius: 12,
+                            fontSize: 14,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {answer.percent}%
+                        </span>
+                      ) : undefined
+                    }
+                    style={{
+                      background,
+                      borderColor,
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    {answer.text}
+                  </Button>
+                </Div>
+              );
+            })}
+          </Group>
+        );
+      })()}
+
 
       {!revealed && !hintBought && (
         <Div style={{ textAlign: 'center', marginTop: 16 }}>
