@@ -176,9 +176,8 @@ const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
                   background = '#FFEBEE';
                   borderColor = '#E64646';
                 }
-              } else if (answer.percent < 15) {
-                mode = 'tertiary';
               }
+              // Lock icon removed — confusing UX when locked answers are still visible
 
               return (
                 <Div key={index} style={{ padding: '6px 0' }}>
@@ -189,9 +188,7 @@ const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
                     onClick={() => handleAnswer(index)}
                     disabled={revealed}
                     before={
-                      !isRevealed && answer.percent < 15 ? (
-                        <span>🔒</span>
-                      ) : isRevealed && isCorrectAnswer ? (
+                      isRevealed && isCorrectAnswer ? (
                         <Icon24CheckCircleOutline style={{ color: '#4BB34A' }} />
                       ) : isRevealed && isSelected ? (
                         <Icon24Cancel style={{ color: '#E64646' }} />
