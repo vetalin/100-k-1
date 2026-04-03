@@ -23,11 +23,17 @@ const GameScreen: React.FC<Props> = ({ onRoundEnd }) => {
 
   const currentQuestion = state.roundQuestions[state.currentQuestionIndex];
 
-  // Shuffle answers so the correct answer isn't always first
+  // Fisher-Yates shuffle — proper uniform random, not sort()-based (which is broken in v8)
   const shuffledAnswers = useMemo(() => {
     if (!currentQuestion) return [];
-    return [...currentQuestion.answers].sort(() => Math.random() - 0.5);
-  }, [currentQuestion?.id]);
+    const arr = [...currentQuestion.answers];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+    // Recompute on question index AND id to handle round resets
+  }, [state.currentQuestionIndex, currentQuestion?.id]);
 
   useEffect(() => {
     setTimer(15);
