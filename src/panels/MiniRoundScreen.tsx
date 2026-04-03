@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Div, Button, Card, Text, Title, Group, FixedLayout, Spacing } from '@vkontakte/vkui';
 import { Question } from '../types/index';
 import { useQuests } from '../store/QuestContext';
@@ -18,15 +18,29 @@ const MiniRoundScreen: React.FC<Props> = ({ questions, onFinish }) => {
   const isLast = currentIndex === questions.length - 1;
   const progress = ((currentIndex) / questions.length) * 100;
 
+  // Fisher-Yates shuffle — correct answer determined by max votes, not position
+  const shuffledAnswers = useMemo(() => {
+    if (!currentQuestion) return [];
+    const arr = [...currentQuestion.answers];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [currentIndex, currentQuestion?.id]);
+
+  // Correct answer = highest votes (not first position after shuffle)
+  const maxVotes = currentQuestion ? Math.max(...currentQuestion.answers.map(a => a.votes)) : 0;
+
   const handleAnswer = (index: number) => {
     if (selected !== null) return;
     setSelected(index);
-    if (index === 0) setCorrectCount(c => c + 1);
+    if (shuffledAnswers[index]?.votes === maxVotes) setCorrectCount(c => c + 1);
   };
 
   const handleNext = () => {
     if (isLast) {
-      onFinish(selected === 0 ? correctCount : correctCount);
+      onFinish(correctCount);
     } else {
       setCurrentIndex(i => i + 1);
       setSelected(null);
@@ -76,8 +90,8 @@ const MiniRoundScreen: React.FC<Props> = ({ questions, onFinish }) => {
       </Card>
 
       <Group style={{ padding: '0 8px' }}>
-        {currentQuestion.answers.map((answer, index) => {
-          const isCorrectAnswer = index === 0;
+        {shuffledAnswers.map((answer, index) => {
+          const isCorrectAnswer = answer.votes === maxVotes;
           const isSelected = selected === index;
 
           let bg = 'var(--vkui--color_background_secondary)';
@@ -137,12 +151,15 @@ const MiniRoundScreen: React.FC<Props> = ({ questions, onFinish }) => {
         })}
       </Group>
 
+      {/* Button fixed to bottom — stays at bottom of screen after scroll */}
       {selected !== null && (
-        <Div style={{ marginTop: 8 }}>
-          <Button size="l" mode="primary" stretched onClick={isLast ? handleFinish : handleNext}>
-            {isLast ? '🏁 Завершить' : 'Дальше →'}
-          </Button>
-        </Div>
+        <FixedLayout vertical="bottom">
+          <Div style={{ padding: '12px 16px 24px', background: 'var(--vkui--color_background)' }}>
+            <Button size="l" mode="primary" stretched onClick={isLast ? handleFinish : handleNext}>
+              {isLast ? '🏁 Завершить' : 'Дальше →'}
+            </Button>
+          </Div>
+        </FixedLayout>
       )}
     </Div>
   );
